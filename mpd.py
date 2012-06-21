@@ -17,6 +17,7 @@
 
 import sys
 import socket
+import threading
 from collections import Callable
 
 HELLO_PREFIX = "OK MPD "
@@ -166,6 +167,7 @@ _commands = {
 class MPDClient():
     def __init__(self, use_unicode=False):
         self.iterate = False
+        self.lock = threading.Lock()
         self.use_unicode = use_unicode
         self._reset()
 
@@ -488,8 +490,10 @@ def bound_decorator(self, function):
 
 def newFunction(wrapper, name, returnValue):
     def decorator(self, *args):
-        return wrapper(self, name, args, bound_decorator(self, returnValue))
+        with self.lock:
+            return wrapper(self, name, args, bound_decorator(self, returnValue))
     return decorator
+
 
 for key, value in _commands.items():
     returnValue = None if value is None else MPDClient.__dict__[value]

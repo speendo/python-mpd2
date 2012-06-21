@@ -6,6 +6,8 @@ import types
 import sys
 from socket import error as SocketError
 import mpd
+import threading
+import random
 
 try:
     # is required for python2.6
@@ -193,14 +195,28 @@ class TestMPDClient(unittest.TestCase):
         self.assertIsInstance(self.client.urlhandlers()[0], unicode)
         self.client.use_unicode = False
         self.assertIsInstance(self.client.urlhandlers()[0], str)
-
     def test_numbers_as_command_args(self):
         res = self.client.find("file", 1)
-
     def test_timeout(self):
         self.client.disconnect()
         self.client.connect(TEST_MPD_HOST, TEST_MPD_PORT, timeout=5)
         self.assertEqual(self.client._sock.gettimeout(), 5)
+    def test_locking(self):
+        def fetch_playlist():
+            for i in range(10):
+                if random.random() % 2 == 0:
+                    song = self.client.currentsong()
+                    self.assertIsInstance(song, dict)
+                else:
+                    playlist = self.client.playlist()
+                    self.assertIsInstance(playlist, list)
+        threads = []
+        for i in range(5):
+            t = threading.Thread(target=fetch_playlist)
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join()
 
 if __name__ == '__main__':
     unittest.main()
