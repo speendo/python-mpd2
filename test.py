@@ -39,7 +39,7 @@ class TestMPDClient(unittest.TestCase):
     longMessage = True
 
     def setUp(self):
-        self.socket_patch = mock.patch("mpd.socket")
+        self.socket_patch = mock.patch("mpd.socket.socket")
         self.socket_mock = self.socket_patch.start()
         self.socket_mock.getaddrinfo.return_value = [range(5)]
 
@@ -280,7 +280,7 @@ class TestMPDClient(unittest.TestCase):
             self.assertIsInstance(res, list)
             self.assertMPDReceived('find "file" "☯☾☝♖✽"\n')
 
-    @unittest.skipIf(sys.version_info >= (3, 0),
+    @unittest.skipIf(sys.version_info >= (3, 3),
                      "Test special unicode handling only if python2")
     def test_unicode_as_reponse(self):
         self.MPDWillReturn("handler: http://\n", "OK\n")
